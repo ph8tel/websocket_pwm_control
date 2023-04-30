@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TBS Tango bound to socket</title>
+</head>
+
+<body>
+    <button onclick=connect()>yo</button>
+    <script>
+        let webSocket;
+        window.addEventListener("gamepadconnected", connect);
+
+        function getPads() {
+            var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);
+            if (gamepads.filter(pad => pad != null).length) {
+                const gamepad = gamepads.filter(pad => pad)[0]
+                return gamepad
+            }
+            return false
+        }
+
+        function connect() {
+            console.log('yo')
+
+            webSocket = new WebSocket("ws://10.0.0.165:8888");
+
+            function checkMovement() {
+                let gamepad = getPads()
+                if (gamepad) {
+                    const axePositions = gamepad.axes.map(axe => Number(Math.round(axe + 'e2') + 'e-2') * 100)
+                    return JSON.stringify(axePositions)
+                } else {
+                    return 'stop'
+                }
+            }
+
+            const pure = () => {
+                if (webSocket.readyState == 1) {
+                    webSocket.send(checkMovement())
+                }
+            }
+
+            webSocket.onopen = function (event) {
+                console.log('open')
+                setInterval(pure, 50)
+            };
+            webSocket.onmessage = function (data) {
+                console.log(data.data)
+            }
+
+        }
+    </script>
+
+</body>
+
+</html>
